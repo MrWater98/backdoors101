@@ -57,6 +57,7 @@ class Cifar10Task(Task):
                         'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
         return True
 
+    # 创建残差网络
     def build_model(self) -> nn.Module:
         if self.params.pretrained:
             model = resnet18(pretrained=True)

@@ -55,6 +55,7 @@ class Task:
     def load_data(self) -> None:
         raise NotImplemented
 
+    # 指出函数返回的变量类型，便于开发人员使用继承
     def build_model(self) -> Module:
         raise NotImplemented
 
@@ -69,11 +70,13 @@ class Task:
     def make_optimizer(self, model=None) -> Optimizer:
         if model is None:
             model = self.model
+        # 随机梯度下降
         if self.params.optimizer == 'SGD':
             optimizer = optim.SGD(model.parameters(),
                                   lr=self.params.lr,
                                   weight_decay=self.params.decay,
                                   momentum=self.params.momentum)
+        # 动量和自适应学习率优化下降，SGD升级版
         elif self.params.optimizer == 'Adam':
             optimizer = optim.Adam(model.parameters(),
                                    lr=self.params.lr,
@@ -91,6 +94,7 @@ class Task:
                                          gamma=0.1)
 
     def resume_model(self):
+        # 对应的是cifar_fed的第22行，应该是用于重启模型
         if self.params.resume_model:
             logger.info(f'Resuming training from {self.params.resume_model}')
             loaded_params = torch.load(f"saved_models/"

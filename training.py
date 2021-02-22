@@ -76,7 +76,9 @@ def fl_run(hlpr: Helper):
 
 
 def run_fl_round(hlpr, epoch):
+    # 获得global的模型
     global_model = hlpr.task.model
+    # 获得local的模型
     local_model = hlpr.task.local_model
 
     round_participants = hlpr.task.sample_users_for_round(epoch)
@@ -120,6 +122,7 @@ if __name__ == '__main__':
     logger.warning(create_table(params))
 
     try:
+        # parameter fl comes from cifar_fed
         if helper.params.fl:
             fl_run(helper)
         else:

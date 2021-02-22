@@ -26,6 +26,7 @@ class FederatedLearningTask(Task):
         self.model = self.model.to(self.params.device)
 
         self.local_model = self.build_model().to(self.params.device)
+        # 直接用entrophy了
         self.criterion = self.make_criterion()
         self.adversaries = self.sample_adversaries()
 
@@ -38,6 +39,7 @@ class FederatedLearningTask(Task):
         for name, data in self.model.state_dict().items():
             weight_accumulator[name] = torch.zeros_like(data)
         return weight_accumulator
+
 
     def sample_users_for_round(self, epoch) -> List[FLUser]:
         sampled_ids = random.sample(
@@ -75,8 +77,11 @@ class FederatedLearningTask(Task):
 
     def sample_adversaries(self) -> List[int]:
         adversaries_ids = []
+        # 对应cifar_fed.yaml第45行，
         if self.params.fl_number_of_adversaries == 0:
+            # vanilla 寻常的，没有新意的
             logger.warning(f'Running vanilla FL, no attack.')
+
         elif self.params.fl_single_epoch_attack is None:
             adversaries_ids = random.sample(
                 range(self.params.fl_total_participants),
