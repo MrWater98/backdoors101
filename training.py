@@ -13,18 +13,24 @@ from utils.utils import *
 
 logger = logging.getLogger('logger')
 
-
+# train_loader
 def train(hlpr: Helper, epoch, model, optimizer, train_loader, attack=True):
+    # criterion指的是评价指标
     criterion = hlpr.task.criterion
+
     model.train()
 
     for i, data in enumerate(train_loader):
         batch = hlpr.task.get_batch(i, data)
+        # 把梯度设置成0，在计算反向传播的时候一般都会这么操作，原因未知
         model.zero_grad()
+        # 主要进行攻击的代码
+        # 可以看blind backdoor xxx
         loss = hlpr.attack.compute_blind_loss(model, criterion, batch, attack)
         loss.backward()
+        # 使用optimizer.step()之后，模型才会更新
         optimizer.step()
-
+        # 打印的函数
         hlpr.report_training_losses_scales(i, epoch)
         if i == hlpr.params.max_batch_id:
             break
@@ -83,26 +89,34 @@ def run_fl_round(hlpr, epoch):
 
     round_participants = hlpr.task.sample_users_for_round(epoch)
     weight_accumulator = hlpr.task.get_empty_accumulator()
-
+    # tqdm是python的进度条库，基本是基于对象迭代
     for user in tqdm(round_participants):
+        # 将参数从global_model复制到local_model
         hlpr.task.copy_params(global_model, local_model)
+        # 一个对象，会保存当前状态，并根据梯度更新参数
         optimizer = hlpr.task.make_optimizer(local_model)
         for local_epoch in range(hlpr.params.fl_local_epochs):
+            # 如果是恶意的用户，则执行进攻的训练
             if user.compromised:
                 train(hlpr, local_epoch, local_model, optimizer,
                       user.train_loader, attack=True)
+            # 如果是非恶意的用户，则执行非进攻的训练
             else:
                 train(hlpr, local_epoch, local_model, optimizer,
                       user.train_loader, attack=False)
+        # 然后来更新global的模型
         local_update = hlpr.task.get_fl_update(local_model, global_model)
+        # 如果用户是恶意用户，还会更新梯度
         if user.compromised:
             hlpr.attack.fl_scale_update(local_update)
+        # 存疑，感觉是积累当前的权重变化
         hlpr.task.accumulate_weights(weight_accumulator, local_update)
-
+    # 所有用户完成之后，更新全局的模型
     hlpr.task.update_global_model(weight_accumulator, global_model)
 
 
 if __name__ == '__main__':
+    # 将所有的命令行参数都解读到parser
     parser = argparse.ArgumentParser(description='Backdoors')
     parser.add_argument('--params', dest='params', default='utils/params.yaml')
     parser.add_argument('--name', dest='name', required=True)
@@ -110,19 +124,19 @@ if __name__ == '__main__':
                         default=get_current_git_hash())
 
     args = parser.parse_args()
-
+    # 第二个参数设定的.yaml最重要，name只是确认你创建的文件的名字
     with open(args.params) as f:
         params = yaml.load(f, Loader=yaml.FullLoader)
-
+    
     params['current_time'] = datetime.now().strftime('%b.%d_%H.%M.%S')
     params['commit'] = args.commit
     params['name'] = args.name
-
+    # Helper读取params
     helper = Helper(params)
     logger.warning(create_table(params))
-
+    
     try:
-        # parameter fl comes from cifar_fed
+        # 参数fl来自于cifar_fed.yaml
         if helper.params.fl:
             fl_run(helper)
         else:

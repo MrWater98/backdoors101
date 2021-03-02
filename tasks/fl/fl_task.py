@@ -20,6 +20,7 @@ class FederatedLearningTask(Task):
     adversaries: List[int] = None
 
     def init_task(self):
+        
         self.load_data()
         self.model = self.build_model()
         self.resume_model()
@@ -104,6 +105,7 @@ class FederatedLearningTask(Task):
         return local_model, optimizer
 
     def copy_params(self, global_model, local_model):
+        # state_d
         local_state = local_model.state_dict()
         for name, param in global_model.state_dict().items():
             if name in local_state and name not in self.ignored_weights:

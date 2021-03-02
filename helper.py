@@ -23,9 +23,15 @@ logger = logging.getLogger('logger')
 
 class Helper:
     params: Params = None
+    # https://docs.python.org/3/library/typing.html#typing.Union
+    # 这应该是意为这要不是Task，要不是FederatedLearningTask
     task: Union[Task, FederatedLearningTask] = None
+    # 来源于 https://github.com/MrWater98/backdoors101 
+    # 将未backdoored的输入转化为backdoored的输入
     synthesizer: Synthesizer = None
+    # 包括了多个人物的同步器和损失率的计算
     attack: Attack = None
+    # tensorboard的结果
     tb_writer: SummaryWriter = None
 
     def __init__(self, params):
@@ -35,24 +41,30 @@ class Helper:
                       'scales': list(), 'total': list(), 'poison': list()}
         if self.params.random_seed is not None:
             self.fix_random(self.params.random_seed)
-
+        # 创建结果的文件夹
         self.make_folders()
+        # 找到训练用的xx_task文件，用默认构造函数获取构造后的结果
         self.make_task()
+        # 基本同上
         self.make_synthesizer()
+        # 拿到Attakc对象
         self.attack = Attack(self.params, self.synthesizer)
-
+        # neural cleanse 识别和减轻神经网络中的后门攻击的手段
         self.nc = True if 'neural_cleanse' in self.params.loss_tasks else False
+
         self.best_loss = float('inf')
 
     def make_task(self):
         name_lower = self.params.task.lower()
         name_cap = self.params.task
+        # 判断是否是联邦学习
         if self.params.fl:
             module_name = f'tasks.fl.{name_lower}_task'
             path = f'tasks/fl/{name_lower}_task.py'
         else:
             module_name = f'tasks.{name_lower}_task'
             path = f'tasks/{name_lower}_task.py'
+        # 通过获取的module的名字来引入这个类以及内部的方法
         try:
             task_module = importlib.import_module(module_name)
             task_class = getattr(task_module, f'{name_cap}Task')
@@ -64,11 +76,14 @@ class Helper:
         self.task = task_class(self.params)
 
     def make_synthesizer(self):
+        # 从.yaml中获得的synthesizer类型
         name_lower = self.params.synthesizer.lower()
         name_cap = self.params.synthesizer
         module_name = f'synthesizers.{name_lower}_synthesizer'
         try:
+            # 引入这个库
             synthesizer_module = importlib.import_module(module_name)
+            # 直接获取整个类
             task_class = getattr(synthesizer_module, f'{name_cap}Synthesizer')
         except (ModuleNotFoundError, AttributeError):
             raise ModuleNotFoundError(

@@ -109,6 +109,7 @@ class Task:
                            f" {self.params.start_epoch}")
 
     def set_input_shape(self):
+        # 从dataset的[0][0]看整一个input的shape情况
         inp = self.train_dataset[0][0]
         self.params.input_shape = inp.shape
 

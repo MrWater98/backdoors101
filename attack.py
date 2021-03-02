@@ -26,9 +26,9 @@ class Attack:
         # Model before attack
         self.fixed_model = None
 
+
     def compute_blind_loss(self, model, criterion, batch, attack):
         """
-
         :param model:
         :param criterion:
         :param batch:
