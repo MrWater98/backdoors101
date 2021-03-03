@@ -20,18 +20,23 @@ class FederatedLearningTask(Task):
     adversaries: List[int] = None
 
     def init_task(self):
-        
+        # load_data对应的是cifarfed_task.py
         self.load_data()
+        # build_model就只是创建一个18层的残差网络
         self.model = self.build_model()
+        # resume_model是当有训练过的模型后，则会使用之前的模型
         self.resume_model()
+        # 使用cpu或者gpu训练，这里主要是使用cpu
         self.model = self.model.to(self.params.device)
 
         self.local_model = self.build_model().to(self.params.device)
         # 直接用entrophy了
         self.criterion = self.make_criterion()
+        # 这个是选择攻击的样本
         self.adversaries = self.sample_adversaries()
-
+        # 评价矩阵
         self.metrics = [AccuracyMetric(), TestLossMetric(self.criterion)]
+        
         self.set_input_shape()
         return
 

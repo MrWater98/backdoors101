@@ -39,6 +39,7 @@ class PatternSynthesizer(Synthesizer):
 
     def __init__(self, task: Task):
         super().__init__(task)
+        # 默认构造的时候就已经制作好pattern了
         self.make_pattern(self.pattern_tensor, self.x_top, self.y_top)
 
     def make_pattern(self, pattern_tensor, x_top, y_top):
@@ -60,6 +61,7 @@ class PatternSynthesizer(Synthesizer):
         self.pattern = self.task.normalize(full_image).to(self.params.device)
 
     def synthesize_inputs(self, batch, attack_portion=None):
+        # 在attakch的portion上加入pattern
         pattern, mask = self.get_pattern()
         batch.inputs[:attack_portion] = (1 - mask) * \
                                         batch.inputs[:attack_portion] + \
@@ -68,6 +70,7 @@ class PatternSynthesizer(Synthesizer):
         return
 
     def synthesize_labels(self, batch, attack_portion=None):
+        # 在attack的portion上加入backdoor_label，这里backdoor_label是8
         batch.labels[:attack_portion].fill_(self.params.backdoor_label)
 
         return

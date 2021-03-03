@@ -16,11 +16,15 @@ class Cifar10Task(Task):
         self.load_cifar_data()
 
     def load_cifar_data(self):
+        # 如果参数中要做transform，那么则
         if self.params.transform_train:
             transform_train = transforms.Compose([
+                # 做一个随机裁剪
                 transforms.RandomCrop(32, padding=4),
+                # 做一个随机的上下翻转
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
+                # 做一个正则化
                 self.normalize,
             ])
         else:
@@ -32,11 +36,13 @@ class Cifar10Task(Task):
             transforms.ToTensor(),
             self.normalize,
         ])
+        # 下载一下训练的数据
         self.train_dataset = torchvision.datasets.CIFAR10(
             root=self.params.data_path,
             train=True,
             download=True,
             transform=transform_train)
+        # 如果已经有要下毒的照片，则不是用semantic backdoor
         if self.params.poison_images:
             self.train_loader = self.remove_semantic_backdoors()
         else:
@@ -44,6 +50,7 @@ class Cifar10Task(Task):
                                            batch_size=self.params.batch_size,
                                            shuffle=True,
                                            num_workers=0)
+        # 下载一下测试集的数据
         self.test_dataset = torchvision.datasets.CIFAR10(
             root=self.params.data_path,
             train=False,
@@ -52,7 +59,7 @@ class Cifar10Task(Task):
         self.test_loader = DataLoader(self.test_dataset,
                                       batch_size=self.params.test_batch_size,
                                       shuffle=False, num_workers=0)
-
+        # 定义一下类
         self.classes = ('plane', 'car', 'bird', 'cat',
                         'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
         return True

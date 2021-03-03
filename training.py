@@ -20,7 +20,9 @@ def train(hlpr: Helper, epoch, model, optimizer, train_loader, attack=True):
 
     model.train()
 
+    # data 里面含有图像数据(input,tensor类型)和标签(labels,tensor类型)
     for i, data in enumerate(train_loader):
+        # 感觉是获取
         batch = hlpr.task.get_batch(i, data)
         # 把梯度设置成0，在计算反向传播的时候一般都会这么操作，原因未知
         model.zero_grad()

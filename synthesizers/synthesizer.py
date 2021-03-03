@@ -10,7 +10,7 @@ class Synthesizer:
     def __init__(self, task: Task):
         self.task = task
         self.params = task.params
-
+        
     def make_backdoor_batch(self, batch: Batch, test=False, attack=True) -> Batch:
 
         # Don't attack if only normal loss task.
@@ -20,10 +20,12 @@ class Synthesizer:
         if test:
             attack_portion = batch.batch_size
         else:
+            # 攻击的的位置来源于从数据集中随机取样
             attack_portion = round(
                 batch.batch_size * self.params.poisoning_proportion)
 
         backdoored_batch = batch.clone()
+        # 传入batch和portion
         self.apply_backdoor(backdoored_batch, attack_portion)
 
         return backdoored_batch
@@ -35,6 +37,7 @@ class Synthesizer:
         :param batch:
         :return:
         """
+        
         self.synthesize_inputs(batch=batch, attack_portion=attack_portion)
         self.synthesize_labels(batch=batch, attack_portion=attack_portion)
 
