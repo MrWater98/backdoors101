@@ -26,7 +26,7 @@ class Helper:
     # https://docs.python.org/3/library/typing.html#typing.Union
     # 这应该是意为这要不是Task，要不是FederatedLearningTask
     task: Union[Task, FederatedLearningTask] = None
-    # 来源于 https://github.com/MrWater98/backdoors101 
+    # 来源于: https://github.com/MrWater98/backdoors101 
     # 将未backdoored的输入转化为backdoored的输入
     synthesizer: Synthesizer = None
     # 包括了多个人物的同步器和损失率的计算
